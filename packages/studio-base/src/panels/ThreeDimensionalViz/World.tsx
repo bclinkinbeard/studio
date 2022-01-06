@@ -51,7 +51,8 @@ import {
   SphereMarker,
   TextMarker,
 } from "@foxglove/studio-base/types/Messages";
-import { MarkerCollector, MarkerProvider } from "@foxglove/studio-base/types/Scene";
+
+import { MarkerCollector, MarkerProvider } from "./types";
 
 type Props = WorldSearchTextProps & {
   autoTextBackgroundColor: boolean;
@@ -100,8 +101,6 @@ function getMarkers({
     instancedLineList: (o) =>
       markers.instancedLineList.push(o as unknown as Interactive<BaseMarker>),
     laserScan: (o) => markers.laserScan.push(o as unknown as Interactive<BaseMarker>),
-    linedConvexHull: (o) =>
-      markers.linedConvexHull.push(o as unknown as Interactive<LineListMarker | LineStripMarker>),
     lineList: (o) => markers.lineList.push(o as Interactive<LineListMarker>),
     lineStrip: (o) => markers.lineStrip.push(o as Interactive<LineStripMarker>),
     mesh: (o) => markers.mesh.push(o as Interactive<MeshMarker>),
@@ -162,7 +161,6 @@ function World(
     grid: [],
     instancedLineList: [],
     laserScan: [],
-    linedConvexHull: [],
     lineList: [],
     lineStrip: [],
     mesh: [],

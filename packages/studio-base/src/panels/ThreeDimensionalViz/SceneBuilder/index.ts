@@ -26,6 +26,11 @@ import {
   CoordinateFrame,
   TransformTree,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/transforms";
+import {
+  MarkerProvider,
+  MarkerCollector,
+  RenderMarkerArgs,
+} from "@foxglove/studio-base/panels/ThreeDimensionalViz/types";
 import { Topic, Frame, MessageEvent, RosObject } from "@foxglove/studio-base/players/types";
 import {
   Color,
@@ -48,15 +53,12 @@ import {
   OccupancyGridMessage,
   PointCloud2,
 } from "@foxglove/studio-base/types/Messages";
-import {
-  MarkerProvider,
-  MarkerCollector,
-  RenderMarkerArgs,
-} from "@foxglove/studio-base/types/Scene";
 import { clonePose, emptyPose } from "@foxglove/studio-base/util/Pose";
 import naturalSort from "@foxglove/studio-base/util/naturalSort";
 
 const log = Log.getLogger(__filename);
+
+const POSE_MARKER_COLOR = { r: 124 / 255, g: 107 / 255, b: 255 / 255, a: 0.5 };
 
 export type TopicSettingsCollection = {
   [topicOrNamespaceKey: string]: Record<string, unknown>;
@@ -70,7 +72,7 @@ const buildSyntheticArrowMarker = ({ topic, message }: MessageEvent<PoseStamped>
   pose,
   frame_locked: true,
   scale: { x: 2, y: 2, z: 0.1 },
-  color: { r: 0, g: 0, b: 1, a: 0.5 },
+  color: POSE_MARKER_COLOR,
   interactionData: { topic, originalMessage: message },
 });
 
@@ -892,7 +894,7 @@ export default class SceneBuilder implements MarkerProvider {
       | OccupancyGridMessage
       | PointCloud2
       | (PoseStamped & { type: 103 })
-      | (LaserScan & { type: 104 });
+      | (LaserScan & { type: 104; pose: MutablePose });
     switch (marker.type) {
       case 1: // CubeMarker
       case 2: // SphereMarker
@@ -916,18 +918,13 @@ export default class SceneBuilder implements MarkerProvider {
       case 103: // PoseStamped
       case 108: // InstanceLineListMarker
       case 110: // ColorMarker
-        marker = { ...marker, pose };
-        break;
       case 101: // OccupancyGridMessage
+      case 104: // LaserScan
         marker = { ...marker, pose };
         break;
-      case 104: // LaserScan - needs special handling
       default:
         break;
     }
-
-    // allow topic settings to override renderable marker command (see MarkerSettingsEditor.js)
-    const { overrideCommand } = this._settingsByKey[`t:${topic.name}`] ?? {};
 
     switch (marker.type) {
       case 0:
@@ -939,16 +936,8 @@ export default class SceneBuilder implements MarkerProvider {
       case 3:
         return add.cylinder(marker);
       case 4:
-        if (overrideCommand === "LinedConvexHull") {
-          return add.linedConvexHull(marker);
-        }
-
         return add.lineStrip(marker);
       case 5:
-        if (overrideCommand === "LinedConvexHull") {
-          return add.linedConvexHull(marker);
-        }
-
         return add.lineList(marker);
       case 6:
         return add.cubeList(marker);

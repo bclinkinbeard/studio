@@ -23,6 +23,7 @@ import Icon from "@foxglove/studio-base/components/Icon";
 import { LegacyInput } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import { Item } from "@foxglove/studio-base/components/Menu";
 import TextHighlight from "@foxglove/studio-base/components/TextHighlight";
+import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import {
   useCurrentLayoutActions,
   usePanelMosaicId,
@@ -42,6 +43,7 @@ const useStyles = makeStyles((theme) => ({
   },
   container: {
     padding: 16,
+    backgroundImage: `linear-gradient(to top, transparent, ${theme.palette.neutralLighterAlt} ${theme.spacing.s1})`,
   },
   item: {
     cursor: "grab",
@@ -71,7 +73,6 @@ const useStyles = makeStyles((theme) => ({
   },
   scrollContainer: {
     overflowY: "auto",
-    height: "100%",
   },
   noResults: {
     padding: "8px 16px",
@@ -92,6 +93,7 @@ type PanelItemProps = {
   panel: {
     type: string;
     title: string;
+    description?: string;
     config?: PanelConfig;
     relatedConfigs?: SavedProps;
   };
@@ -113,6 +115,7 @@ function DraggablePanelItem({
   mosaicId,
 }: PanelItemProps) {
   const classes = useStyles();
+  const theme = useTheme();
   const scrollRef = React.useRef<HTMLDivElement>(ReactNull);
   const [, drag] = useDrag<unknown, MosaicDropResult, never>({
     type: MosaicDragType.WINDOW,
@@ -154,18 +157,31 @@ function DraggablePanelItem({
     }
   }, [highlighted]);
 
+  const { ref: tooltipRef, tooltip } = useTooltip({
+    contents: (
+      <div style={{ padding: `0 ${theme.spacing.s1}`, width: "200px" }}>
+        <p style={{ fontWeight: "bold", marginTop: theme.spacing.s1 }}>{panel.title}</p>
+        <p style={{ marginBottom: theme.spacing.s1 }}>{panel.description}</p>
+      </div>
+    ),
+    placement: "right",
+    delay: 0,
+  });
   return (
     <div ref={drag}>
-      <div ref={scrollRef}>
-        <Item
-          onClick={onClick}
-          checked={checked}
-          highlighted={highlighted}
-          className={classes.item}
-          dataTest={`panel-menu-item ${panel.title}`}
-        >
-          <TextHighlight targetStr={panel.title} searchText={searchQuery} />
-        </Item>
+      <div ref={tooltipRef}>
+        <div ref={scrollRef}>
+          {tooltip}
+          <Item
+            onClick={onClick}
+            checked={checked}
+            highlighted={highlighted}
+            className={classes.item}
+            dataTest={`panel-menu-item ${panel.title}`}
+          >
+            <TextHighlight targetStr={panel.title} searchText={searchQuery} />
+          </Item>
+        </div>
       </div>
     </div>
   );
@@ -240,8 +256,8 @@ function PanelList(props: Props): JSX.Element {
   const panelCatalog = usePanelCatalog();
   const { allRegularPanels, allPreconfiguredPanels } = useMemo(() => {
     const panels = panelCatalog.getPanels();
-    const regular = panels.filter((panel) => panel.preconfigured !== true);
-    const preconfigured = panels.filter((panel) => panel.preconfigured === true);
+    const regular = panels.filter((panel) => !panel.config);
+    const preconfigured = panels.filter((panel) => panel.config);
     const sortByTitle = (a: PanelInfo, b: PanelInfo) =>
       a.title.localeCompare(b.title, undefined, { ignorePunctuation: true, sensitivity: "base" });
 
@@ -304,12 +320,12 @@ function PanelList(props: Props): JSX.Element {
   );
 
   const displayPanelListItem = React.useCallback(
-    ({ title, type, config, relatedConfigs }: PanelInfo) => {
+    ({ title, type, description, config, relatedConfigs }: PanelInfo) => {
       return (
         <DraggablePanelItem
           key={`${type}-${title}`}
           mosaicId={mosaicId}
-          panel={{ type, title, config, relatedConfigs }}
+          panel={{ type, title, description, config, relatedConfigs }}
           onDrop={onPanelMenuItemDrop}
           onClick={() => onPanelSelect({ type, config, relatedConfigs })}
           checked={title === selectedPanelTitle}
