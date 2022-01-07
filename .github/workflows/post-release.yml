@@ -13,8 +13,11 @@ on:
 
 jobs:
   bump:
-    name: Bump dev
+    name: Merge release branch
     runs-on: ubuntu-20.04
+
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout ${{ github.event.release.target_commitish || github.event.inputs.target_commitish }}
@@ -47,7 +50,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.FOXGLOVEBOT_GITHUB_TOKEN }}
 
   npm:
-    name: NPM publish
+    name: Publish to NPM
     runs-on: ubuntu-20.04
 
     steps:
@@ -72,3 +75,50 @@ jobs:
       - run: npm publish ./packages/studio-base
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+
+  docker:
+    name: Publish to GHCR
+    runs-on: ubuntu-20.04
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout ${{ github.event.release.tag_name || github.event.inputs.tag_name }}
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.release.tag_name || github.event.inputs.tag_name }}
+          lfs: true
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate Docker tags
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}},value=${{ github.event.release.tag_name || github.event.inputs.tag_name }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ github.event.release.tag_name || github.event.inputs.tag_name }}
+            latest
+
+      - name: Configure QEMU
+        uses: docker/setup-qemu-action@v1
+
+      - name: Configure Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

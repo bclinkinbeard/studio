@@ -63,7 +63,6 @@ import {
   TRANSFORM_TOPIC,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/constants";
 import {
-  TargetPose,
   getInteractionData,
   getObject,
   getUpdatedGlobalVariablesBySelectedObject,
@@ -72,7 +71,10 @@ import {
   CoordinateFrame,
   TransformTree,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/transforms";
-import { ThreeDimensionalVizConfig } from "@foxglove/studio-base/panels/ThreeDimensionalViz/types";
+import {
+  FollowMode,
+  ThreeDimensionalVizConfig,
+} from "@foxglove/studio-base/panels/ThreeDimensionalViz/types";
 import { Frame, Topic } from "@foxglove/studio-base/players/types";
 import inScreenshotTests from "@foxglove/studio-base/stories/inScreenshotTests";
 import { Color, Marker } from "@foxglove/studio-base/types/Messages";
@@ -88,14 +90,12 @@ export type ClickedPosition = { clientX: number; clientY: number };
 
 export type LayoutToolbarSharedProps = {
   cameraState: CameraState;
-  followOrientation: boolean;
-  followTf?: string | false;
+  followMode: "follow" | "no-follow" | "follow-orientation";
+  followTf?: string;
   onAlignXYAxis: () => void;
   onCameraStateChange: (arg0: CameraState) => void;
-  // eslint-disable-next-line @foxglove/no-boolean-parameters
-  onFollowChange: (followTf?: string | false, followOrientation?: boolean) => void;
+  onFollowChange: (followTf?: string, followMode?: FollowMode) => void;
   saveConfig: Save3DConfig;
-  targetPose?: TargetPose;
   transforms: TransformTree;
   isPlaying?: boolean;
 };
@@ -205,7 +205,7 @@ export default function Layout({
   renderFrame,
   fixedFrame,
   currentTime,
-  followOrientation,
+  followMode,
   followTf,
   resetFrame,
   frame,
@@ -216,7 +216,6 @@ export default function Layout({
   onFollowChange,
   saveConfig,
   topics,
-  targetPose,
   transforms,
   setSubscriptions,
   config: {
@@ -835,7 +834,7 @@ export default function Layout({
                   interactionsTabType={interactionsTabType}
                   setInteractionsTabType={setInteractionsTabType}
                   debug={debug}
-                  followOrientation={followOrientation}
+                  followMode={followMode}
                   followTf={followTf}
                   isPlaying={isPlaying}
                   measureInfo={measureInfo}
@@ -850,7 +849,6 @@ export default function Layout({
                   selectedObject={selectedObject}
                   setMeasureInfo={setMeasureInfo}
                   showCrosshair={showCrosshair}
-                  targetPose={targetPose}
                   transforms={transforms}
                   renderFrameId={renderFrame.id}
                   fixedFrameId={fixedFrame.id}
