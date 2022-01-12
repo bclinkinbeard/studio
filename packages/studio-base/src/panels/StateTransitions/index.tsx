@@ -386,6 +386,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
           <TimeBasedChart
             zoom
             isSynced
+            showXAxisLabels
             width={width ?? 0}
             height={height}
             data={data}
