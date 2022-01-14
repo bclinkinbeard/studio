@@ -532,7 +532,6 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
             menuIconProps={{ iconName: "ClockOutline" }}
             menuProps={{
               styles: {
-                root: { overflow: "hidden" },
                 subComponentStyles: {
                   menuItem: {
                     root: { height: 24 },
