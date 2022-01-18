@@ -11,7 +11,8 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Stack, IButtonStyles, useTheme, StackItem, makeStyles } from "@fluentui/react";
+import { IButtonStyles, useTheme } from "@fluentui/react";
+import { Stack } from "@mui/material";
 import { merge } from "lodash";
 import { useCallback, useMemo, useState } from "react";
 
@@ -30,13 +31,6 @@ import PlaybackTimeDisplay from "./PlaybackTimeDisplay";
 import RepeatAdapter from "./RepeatAdapter";
 import Scrubber from "./Scrubber";
 
-const useStyles = makeStyles((theme) => ({
-  root: {
-    backgroundColor: theme.palette.neutralLighterAlt,
-    borderTop: `1px solid ${theme.palette.neutralLighter}`,
-  },
-}));
-
 export default function PlaybackControls({
   play,
   pause,
@@ -51,7 +45,6 @@ export default function PlaybackControls({
   getTimeInfo: () => { startTime?: Time; endTime?: Time; currentTime?: Time };
 }): JSX.Element {
   const theme = useTheme();
-  const styles = useStyles();
   const [repeat, setRepeat] = useState(false);
 
   const resumePlay = useCallback(() => {
@@ -145,29 +138,22 @@ export default function PlaybackControls({
       />
       <KeyListener global keyDownHandlers={keyDownHandlers} />
       <Stack
-        horizontal
-        verticalAlign="center"
-        className={styles.root}
-        tokens={{
-          childrenGap: theme.spacing.s1,
-          padding: theme.spacing.s1,
+        direction="row"
+        alignItems="center"
+        spacing={1}
+        padding={1}
+        sx={{
+          backgroundColor: theme.palette.neutralLighterAlt,
+          borderTop: `1px solid ${theme.palette.neutralLighter}`,
         }}
       >
-        <Stack horizontal verticalAlign="center" tokens={{ childrenGap: theme.spacing.s1 }}>
+        <Stack direction="row" alignItems="center" spacing={1}>
           <MessageOrderControls />
           <PlaybackSpeedControls />
         </Stack>
-        <Stack
-          horizontal
-          verticalAlign="center"
-          styles={{ root: { flex: 1 } }}
-          tokens={{
-            childrenGap: theme.spacing.s1,
-            padding: `0 ${theme.spacing.s2}`,
-          }}
-        >
-          <Stack horizontal verticalAlign="center" tokens={{ childrenGap: theme.spacing.s2 }}>
-            <StackItem>
+        <Stack direction="row" alignItems="center" flex={1} spacing={1} paddingX={0.5}>
+          <Stack direction="row" alignItems="center" spacing={0.5}>
+            <div>
               <Tooltip contents="Loop playback">
                 <HoverableIconButton
                   checked={repeat}
@@ -181,8 +167,8 @@ export default function PlaybackControls({
                   })}
                 />
               </Tooltip>
-            </StackItem>
-            <StackItem>
+            </div>
+            <div>
               <HoverableIconButton
                 onClick={isPlaying ? pause : resumePlay}
                 iconProps={{
@@ -193,20 +179,13 @@ export default function PlaybackControls({
                   rootDisabled: { background: "transparent" },
                 })}
               />
-            </StackItem>
+            </div>
           </Stack>
-          <Stack
-            horizontal
-            grow={1}
-            verticalAlign="center"
-            styles={{ root: { height: "28px", position: "relative" } }}
-          >
-            <Scrubber onSeek={seek} />
-          </Stack>
+          <Scrubber onSeek={seek} />
           <PlaybackTimeDisplay onSeek={seek} onPause={pause} />
         </Stack>
-        <Stack horizontal verticalAlign="center" tokens={{ childrenGap: 2 }}>
-          <StackItem>
+        <Stack direction="row" alignItems="center" spacing={0.25}>
+          <div>
             <Tooltip contents="Seek backward">
               <HoverableIconButton
                 iconProps={{ iconName: "Previous", iconNameActive: "PreviousFilled" }}
@@ -220,8 +199,8 @@ export default function PlaybackControls({
                 styles={merge(seekIconButttonStyles({ left: true }), iconButtonStyles)}
               />
             </Tooltip>
-          </StackItem>
-          <StackItem>
+          </div>
+          <div>
             <Tooltip contents="Seek forward">
               <HoverableIconButton
                 iconProps={{ iconName: "Next", iconNameActive: "NextFilled" }}
@@ -235,7 +214,7 @@ export default function PlaybackControls({
                 styles={merge(seekIconButttonStyles({ right: true }), iconButtonStyles)}
               />
             </Tooltip>
-          </StackItem>
+          </div>
         </Stack>
       </Stack>
     </>
