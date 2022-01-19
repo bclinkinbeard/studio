@@ -11,7 +11,8 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Link, Stack, Text, makeStyles, useTheme } from "@fluentui/react";
+import { Link, Text, makeStyles, useTheme } from "@fluentui/react";
+import { Stack } from "@mui/material";
 import cx from "classnames";
 import { useCallback } from "react";
 import { useDrop } from "react-dnd";
@@ -76,12 +77,7 @@ export const EmptyDropTarget = ({ tabId }: Props): JSX.Element => {
         [classes.dropzoneOver]: isOver,
       })}
     >
-      <Stack
-        horizontalAlign="center"
-        verticalFill
-        verticalAlign="center"
-        tokens={{ childrenGap: theme.spacing.m, padding: theme.spacing.m }}
-      >
+      <Stack height="100%" justifyContent="center" alignItems="center" spacing={2} padding={2}>
         <EmptyBoxIcon />
 
         <Text
