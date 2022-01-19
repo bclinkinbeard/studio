@@ -32,15 +32,16 @@ import { Save3DConfig } from "@foxglove/studio-base/panels/ThreeDimensionalViz";
 import DebugStats from "@foxglove/studio-base/panels/ThreeDimensionalViz/DebugStats";
 import GridBuilder from "@foxglove/studio-base/panels/ThreeDimensionalViz/GridBuilder";
 import {
+  interactionStateReducer,
+  makeInitialInteractionState,
+} from "@foxglove/studio-base/panels/ThreeDimensionalViz/InteractionState";
+import {
   InteractionContextMenu,
   OBJECT_TAB_TYPE,
   TabType,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions";
 import useLinkedGlobalVariables from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
 import LayoutToolbar from "@foxglove/studio-base/panels/ThreeDimensionalViz/LayoutToolbar";
-import MeasuringTool, {
-  MeasureInfo,
-} from "@foxglove/studio-base/panels/ThreeDimensionalViz/MeasuringTool";
 import SceneBuilder from "@foxglove/studio-base/panels/ThreeDimensionalViz/SceneBuilder";
 import { useSearchText } from "@foxglove/studio-base/panels/ThreeDimensionalViz/SearchText";
 import {
@@ -73,6 +74,8 @@ import {
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/transforms";
 import {
   FollowMode,
+  ReglMouseEventHandler,
+  MouseEventName,
   ThreeDimensionalVizConfig,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/types";
 import { Frame, Topic } from "@foxglove/studio-base/players/types";
@@ -85,7 +88,6 @@ import {
 } from "@foxglove/studio-base/util/globalConstants";
 import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
 
-type EventName = "onDoubleClick" | "onMouseMove" | "onMouseDown" | "onMouseUp";
 export type ClickedPosition = { clientX: number; clientY: number };
 
 export type LayoutToolbarSharedProps = {
@@ -220,6 +222,7 @@ export default function Layout({
   transforms,
   setSubscriptions,
   urdfBuilder,
+  config,
   config: {
     autoTextBackgroundColor = false,
     checkedKeys,
@@ -243,10 +246,12 @@ export default function Layout({
   const { globalVariables, setGlobalVariables } = useGlobalVariables();
   const [debug, setDebug] = useState(false);
   const [showTopicTree, setShowTopicTree] = useState<boolean>(false);
-  const [measureInfo, setMeasureInfo] = useState<MeasureInfo>({
-    measureState: "idle",
-    measurePoints: { start: undefined, end: undefined },
-  });
+  const [interactionState, interactionStateDispatch] = useReducer(
+    interactionStateReducer,
+    {},
+    makeInitialInteractionState,
+  );
+
   const [currentEditingTopic, setCurrentEditingTopic] = useState<Topic | undefined>(undefined);
 
   const searchTextProps = useSearchText();
@@ -259,7 +264,6 @@ export default function Layout({
   } = searchTextProps;
   // used for updating DrawPolygon during mouse move and scenebuilder namespace change.
   const [_, forceUpdate] = useReducer((x: number) => x + 1, 0);
-  const measuringElRef = useRef<MeasuringTool>(ReactNull);
   const [interactionsTabType, setInteractionsTabType] = useState<TabType | undefined>(undefined);
 
   const [selectionState, setSelectionState] = useState<UserSelectionState>({
@@ -274,7 +278,10 @@ export default function Layout({
   const [hoveredMarkerMatchers, setHoveredMarkerMatchers] = useState<MarkerMatcher[]>([]);
   const setHoveredMarkerMatchersDebounced = useDebouncedCallback(setHoveredMarkerMatchers, 100);
 
-  const isDrawing = useMemo(() => measureInfo.measureState !== "idle", [measureInfo.measureState]);
+  const isDrawing = useMemo(
+    () => interactionState.tool.name !== "idle",
+    [interactionState.tool.name],
+  );
 
   const { gridBuilder, sceneBuilder, transformsBuilder } = useMemo(
     () => ({
@@ -536,16 +543,29 @@ export default function Layout({
     });
   }, []);
 
-  const handleEvent = useCallback(
-    (eventName: EventName, ev: React.MouseEvent, args?: ReglClickInfo) => {
-      if (!args) {
-        return;
+  const eventHandlers = useRef(new Map<MouseEventName, Set<ReglMouseEventHandler>>());
+
+  const addMouseEventHandler = useCallback(
+    (eventName: MouseEventName, handler: ReglMouseEventHandler) => {
+      if (!eventHandlers.current.has(eventName)) {
+        eventHandlers.current.set(eventName, new Set());
       }
-      const measuringHandler =
-        eventName === "onDoubleClick" ? undefined : measuringElRef.current?.[eventName];
-      const measureActive = measuringElRef.current?.measureActive ?? false;
-      if (measuringHandler && measureActive) {
-        return measuringHandler(ev.nativeEvent, args);
+      eventHandlers.current.get(eventName)?.add(handler);
+    },
+    [],
+  );
+
+  const removeMouseEventHandler = useCallback(
+    (eventName: MouseEventName, handler: ReglMouseEventHandler) => {
+      eventHandlers.current.get(eventName)?.delete(handler);
+    },
+    [],
+  );
+
+  const handleEvent = useCallback(
+    (eventName: MouseEventName, ev: React.MouseEvent, click?: ReglClickInfo) => {
+      if (click) {
+        eventHandlers.current.get(eventName)?.forEach((handler) => handler(ev, click));
       }
     },
     [],
@@ -642,8 +662,8 @@ export default function Layout({
         currentSaveConfig({
           cameraState: { ...currentCameraState, perspective: !currentCameraState.perspective },
         });
-        if (measuringElRef.current && currentCameraState.perspective) {
-          measuringElRef.current.reset();
+        if (currentCameraState.perspective) {
+          interactionStateDispatch({ action: "reset" });
         }
       },
     };
@@ -823,29 +843,31 @@ export default function Layout({
               {children}
               <div>
                 <LayoutToolbar
+                  addMouseEventHandler={addMouseEventHandler}
+                  autoSyncCameraState={!!autoSyncCameraState}
                   cameraState={cameraState}
-                  interactionsTabType={interactionsTabType}
-                  setInteractionsTabType={setInteractionsTabType}
+                  config={config}
+                  currentTime={currentTime}
                   debug={debug}
+                  fixedFrameId={fixedFrame.id}
                   followMode={followMode}
                   followTf={followTf}
+                  interactionsTabType={interactionsTabType}
+                  interactionState={interactionState}
+                  interactionStateDispatch={interactionStateDispatch}
                   isPlaying={isPlaying}
-                  measureInfo={measureInfo}
-                  measuringElRef={measuringElRef}
                   onAlignXYAxis={onAlignXYAxis}
                   onCameraStateChange={onCameraStateChange}
-                  autoSyncCameraState={!!autoSyncCameraState}
                   onFollowChange={onFollowChange}
                   onToggleCameraMode={toggleCameraMode}
                   onToggleDebug={toggleDebug}
+                  removeMouseEventHandler={removeMouseEventHandler}
+                  renderFrameId={renderFrame.id}
                   saveConfig={saveConfig}
                   selectedObject={selectedObject}
-                  setMeasureInfo={setMeasureInfo}
+                  setInteractionsTabType={setInteractionsTabType}
                   showCrosshair={showCrosshair}
                   transforms={transforms}
-                  renderFrameId={renderFrame.id}
-                  fixedFrameId={fixedFrame.id}
-                  currentTime={currentTime}
                   {...searchTextProps}
                 />
               </div>

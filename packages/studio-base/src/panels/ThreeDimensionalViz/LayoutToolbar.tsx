@@ -18,54 +18,63 @@ import { Time } from "@foxglove/rostime";
 import CameraInfo from "@foxglove/studio-base/panels/ThreeDimensionalViz/CameraInfo";
 import Crosshair from "@foxglove/studio-base/panels/ThreeDimensionalViz/Crosshair";
 import FollowTFControl from "@foxglove/studio-base/panels/ThreeDimensionalViz/FollowTFControl";
+import { InteractionStateProps } from "@foxglove/studio-base/panels/ThreeDimensionalViz/InteractionState";
 import Interactions from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions";
 import { TabType } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/Interactions";
 import { LayoutToolbarSharedProps } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Layout";
 import MainToolbar from "@foxglove/studio-base/panels/ThreeDimensionalViz/MainToolbar";
 import MeasureMarker from "@foxglove/studio-base/panels/ThreeDimensionalViz/MeasureMarker";
-import MeasuringTool, {
-  MeasureInfo,
-} from "@foxglove/studio-base/panels/ThreeDimensionalViz/MeasuringTool";
+import { MeasuringTool } from "@foxglove/studio-base/panels/ThreeDimensionalViz/MeasuringTool";
+import { PublishMarker } from "@foxglove/studio-base/panels/ThreeDimensionalViz/PublishMarker";
+import { PublishPoseTool } from "@foxglove/studio-base/panels/ThreeDimensionalViz/PublishPoseTool";
 import SearchText, {
   SearchTextProps,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/SearchText";
+import {
+  MouseEventHandlerProps,
+  ThreeDimensionalVizConfig,
+} from "@foxglove/studio-base/panels/ThreeDimensionalViz/types";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
-type Props = LayoutToolbarSharedProps &
+type Props = InteractionStateProps &
+  LayoutToolbarSharedProps &
+  MouseEventHandlerProps &
   SearchTextProps & {
     autoSyncCameraState: boolean;
+    config: ThreeDimensionalVizConfig;
+    currentTime: Time;
     debug: boolean;
+    fixedFrameId?: string;
     interactionsTabType?: TabType;
-    measureInfo: MeasureInfo;
-    measuringElRef: { current: MeasuringTool | ReactNull };
     onToggleCameraMode: () => void;
     onToggleDebug: () => void;
     renderFrameId?: string;
-    fixedFrameId?: string;
-    currentTime: Time;
     selectedObject?: MouseEventObject;
     setInteractionsTabType: (arg0?: TabType) => void;
-    setMeasureInfo: (arg0: MeasureInfo) => void;
     showCrosshair?: boolean;
   };
 
 function LayoutToolbar({
+  addMouseEventHandler,
   autoSyncCameraState,
   cameraState,
+  config,
+  currentTime,
   debug,
+  fixedFrameId,
   followMode,
   followTf,
   interactionsTabType,
+  interactionState,
+  interactionStateDispatch,
   isPlaying,
-  measureInfo,
-  measuringElRef,
   onAlignXYAxis,
   onCameraStateChange,
   onFollowChange,
   onToggleCameraMode,
   onToggleDebug,
+  removeMouseEventHandler,
   renderFrameId,
-  fixedFrameId,
   searchInputRef,
   searchText,
   searchTextMatches,
@@ -73,24 +82,16 @@ function LayoutToolbar({
   selectedMatchIndex,
   selectedObject,
   setInteractionsTabType,
-  setMeasureInfo,
   setSearchText,
   setSearchTextMatches,
   setSelectedMatchIndex,
   showCrosshair = false,
   toggleSearchTextOpen,
   transforms,
-  currentTime,
 }: Props) {
   const theme = useTheme();
   return (
     <>
-      <MeasuringTool
-        ref={measuringElRef}
-        measureState={measureInfo.measureState}
-        measurePoints={measureInfo.measurePoints}
-        onMeasureInfoChange={setMeasureInfo}
-      />
       <Stack
         styles={{
           root: {
@@ -136,18 +137,18 @@ function LayoutToolbar({
           styles={{ root: { position: "relative" } }}
           tokens={{ childrenGap: theme.spacing.s1 }}
         >
-          {measuringElRef.current && (
+          {interactionState.measure?.distance != undefined && (
             <Text variant="small" styles={{ root: { fontFamily: fonts.MONOSPACE } }}>
-              {measuringElRef.current?.measureDistance}
+              {interactionState.measure.distance.toFixed(2)}m
             </Text>
           )}
           <MainToolbar
-            measureInfo={measureInfo}
-            measuringTool={measuringElRef.current ?? undefined}
-            perspective={cameraState.perspective}
             debug={debug}
+            interactionState={interactionState}
+            interactionStateDispatch={interactionStateDispatch}
             onToggleCameraMode={onToggleCameraMode}
             onToggleDebug={onToggleDebug}
+            perspective={cameraState.perspective}
           />
         </Stack>
         <Interactions
@@ -167,7 +168,26 @@ function LayoutToolbar({
         />
       </Stack>
       {!cameraState.perspective && showCrosshair && <Crosshair cameraState={cameraState} />}
-      <MeasureMarker measurePoints={measureInfo.measurePoints} />
+      {interactionState.tool.name === "measure" && (
+        <MeasuringTool
+          addMouseEventHandler={addMouseEventHandler}
+          interactionState={interactionState}
+          interactionStateDispatch={interactionStateDispatch}
+          removeMouseEventHandler={removeMouseEventHandler}
+        />
+      )}
+      {interactionState.tool.name === "publish-click" && fixedFrameId && (
+        <PublishPoseTool
+          addMouseEventHandler={addMouseEventHandler}
+          config={config}
+          frameId={fixedFrameId}
+          interactionState={interactionState}
+          interactionStateDispatch={interactionStateDispatch}
+          removeMouseEventHandler={removeMouseEventHandler}
+        />
+      )}
+      {interactionState.measure && <MeasureMarker points={interactionState.measure} />}
+      {interactionState.publish && <PublishMarker points={interactionState.publish} />}
     </>
   );
 }

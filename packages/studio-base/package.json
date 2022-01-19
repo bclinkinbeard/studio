@@ -198,5 +198,8 @@
     "wasm-lz4": "2.0.0",
     "webpack": "5.65.0",
     "xacro-parser": "0.3.5"
+  },
+  "dependencies": {
+    "immer": "9.0.12"
   }
 }

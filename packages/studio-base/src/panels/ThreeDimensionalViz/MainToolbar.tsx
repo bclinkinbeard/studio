@@ -5,65 +5,79 @@
 import { IconButton, IButtonStyles, Stack, useTheme } from "@fluentui/react";
 
 import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
-import MeasuringTool, {
-  MeasureInfo,
-} from "@foxglove/studio-base/panels/ThreeDimensionalViz/MeasuringTool";
+import { InteractionStateProps } from "@foxglove/studio-base/panels/ThreeDimensionalViz/InteractionState";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
-type Props = {
-  measuringTool?: MeasuringTool;
-  measureInfo: MeasureInfo;
-  perspective: boolean;
+type Props = InteractionStateProps & {
   debug: boolean;
   onToggleCameraMode: () => void;
   onToggleDebug: () => void;
+  perspective: boolean;
 };
 
 function MainToolbar({
-  measuringTool,
-  measureInfo: { measureState },
   debug,
+  interactionState,
+  interactionStateDispatch,
   onToggleCameraMode,
   onToggleDebug,
   perspective = false,
 }: Props) {
   const theme = useTheme();
-  const measureActive = measureState === "place-start" || measureState === "place-finish";
-
   const toggleCameraButton = useTooltip({
     contents: perspective ? "Switch to 2D camera" : "Switch to 3D camera",
   });
   const measuringToolButton = useTooltip({
     contents: perspective
       ? "Switch to 2D camera to measure distance"
-      : measureActive
+      : interactionState.tool.name === "measure"
       ? "Cancel measuring"
       : "Measure distance",
+  });
+  const publishGoalToolButton = useTooltip({
+    contents:
+      interactionState.publish?.type === "goal"
+        ? "Cancel goal publishing"
+        : "Click to publish goal",
+  });
+  const publishPoseToolButton = useTooltip({
+    contents:
+      interactionState.publish?.type === "pose"
+        ? "Cancel pose publishing"
+        : "Click to publish pose",
+  });
+  const publishPointToolButton = useTooltip({
+    contents:
+      interactionState.publish?.type === "point"
+        ? "Cancel point publishing"
+        : "Click to publish point",
   });
   const debugButton = useTooltip({
     contents: debug ? "Disable debug" : "Enable debug",
   });
 
-  const iconButtonStyles: Partial<IButtonStyles> = {
-    rootHovered: { backgroundColor: "transparent" },
-    rootPressed: { backgroundColor: "transparent" },
-    rootDisabled: { backgroundColor: "transparent" },
+  function makeIconButtonStyles(fill: string = "currentColor"): Partial<IButtonStyles> {
+    return {
+      rootHovered: { backgroundColor: "transparent" },
+      rootPressed: { backgroundColor: "transparent" },
+      rootDisabled: { backgroundColor: "transparent" },
 
-    rootChecked: { backgroundColor: "transparent" },
-    rootCheckedHovered: { backgroundColor: "transparent" },
-    rootCheckedPressed: { backgroundColor: "transparent" },
+      rootChecked: { backgroundColor: "transparent" },
+      rootCheckedHovered: { backgroundColor: "transparent" },
+      rootCheckedPressed: { backgroundColor: "transparent" },
 
-    iconChecked: { color: colors.HIGHLIGHT },
-    icon: {
-      color: theme.semanticColors.bodyText,
+      iconChecked: { color: colors.HIGHLIGHT },
+      icon: {
+        color: theme.semanticColors.bodyText,
 
-      svg: {
-        fill: "currentColor",
-        height: "1em",
-        width: "1em",
+        svg: {
+          fill,
+          height: "1em",
+          width: "1em",
+        },
       },
-    },
-  };
+    };
+  }
 
   return (
     <Stack
@@ -84,16 +98,49 @@ function MainToolbar({
         elementRef={toggleCameraButton.ref}
         data-text="MainToolbar-toggleCameraMode"
         iconProps={{ iconName: "Video3d" }}
-        styles={iconButtonStyles}
+        styles={makeIconButtonStyles()}
       />
       {measuringToolButton.tooltip}
       <IconButton
-        checked={measureActive}
+        checked={interactionState.tool.name === "measure"}
         disabled={perspective}
-        onClick={measuringTool ? measuringTool.toggleMeasureState : undefined}
+        onClick={() => interactionStateDispatch({ action: "select-tool", tool: "measure" })}
         elementRef={measuringToolButton.ref}
         iconProps={{ iconName: "Ruler" }}
-        styles={iconButtonStyles}
+        styles={makeIconButtonStyles()}
+      />
+      {publishPoseToolButton.tooltip}
+      <IconButton
+        checked={interactionState.publish?.type === "pose"}
+        disabled={perspective}
+        onClick={() =>
+          interactionStateDispatch({ action: "select-tool", tool: "publish-click", type: "pose" })
+        }
+        elementRef={publishPoseToolButton.ref}
+        iconProps={{ iconName: "UnfoldMore" }}
+        styles={makeIconButtonStyles()}
+      />
+      {publishGoalToolButton.tooltip}
+      <IconButton
+        checked={interactionState.publish?.type === "goal"}
+        disabled={perspective}
+        onClick={() =>
+          interactionStateDispatch({ action: "select-tool", tool: "publish-click", type: "goal" })
+        }
+        elementRef={publishGoalToolButton.ref}
+        iconProps={{ iconName: "ArrowLeftRight" }}
+        styles={makeIconButtonStyles()}
+      />
+      {publishPointToolButton.tooltip}
+      <IconButton
+        checked={interactionState.publish?.type === "point"}
+        disabled={perspective}
+        onClick={() =>
+          interactionStateDispatch({ action: "select-tool", tool: "publish-click", type: "point" })
+        }
+        elementRef={publishPointToolButton.ref}
+        iconProps={{ iconName: "ArrowStepRight" }}
+        styles={makeIconButtonStyles()}
       />
       {process.env.NODE_ENV === "development" && (
         <>
@@ -103,7 +150,7 @@ function MainToolbar({
             onClick={onToggleDebug}
             elementRef={debugButton.ref}
             iconProps={{ iconName: "Bug" }}
-            styles={iconButtonStyles}
+            styles={makeIconButtonStyles()}
           />
         </>
       )}
