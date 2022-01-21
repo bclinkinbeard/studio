@@ -1,0 +1,22 @@
+diff --git a/lib/JSONNestedNode.js b/lib/JSONNestedNode.js
+index 544cd314c7217bbd14e5fc1326ab097005f9fe7e..410e4f1d052b969214ee875c5b4b5acfcb3539ca 100644
+--- a/lib/JSONNestedNode.js
++++ b/lib/JSONNestedNode.js
+@@ -123,6 +123,17 @@ var JSONNestedNode = /*#__PURE__*/function (_React$Component) {
+ 
+     _defineProperty(_assertThisInitialized(_this), "handleClick", function () {
+       if (_this.props.expandable) {
++        const {
++          data,
++          level,
++          keyPath
++        } = _this.props;
++        if (_this.props.onExpand && !_this.state.expanded) {
++          _this.props.onExpand(data, level, keyPath);
++        }
++        if (_this.props.onCollapse && _this.state.expanded) {
++          _this.props.onCollapse(data, level, keyPath);
++        }
+         _this.setState({
+           expanded: !_this.state.expanded
+         });

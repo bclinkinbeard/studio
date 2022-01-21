@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { mergeStyleSets, useTheme } from "@fluentui/react";
+import { arraysEqual, mergeStyleSets, useTheme } from "@fluentui/react";
 import CheckboxBlankOutlineIcon from "@mdi/svg/svg/checkbox-blank-outline.svg";
 import CheckboxMarkedIcon from "@mdi/svg/svg/checkbox-marked.svg";
 import PlusMinusIcon from "@mdi/svg/svg/plus-minus.svg";
@@ -331,10 +331,19 @@ function RawMessages(props: Props) {
     [datatypes, getValueLabels, onTopicPathChange, openSiblingPanel],
   );
 
+  //const [expandedKeyPaths, setExpandedKeyPaths] = useState<Array<string[]>>([]);
+
   const renderSingleTopicOrDiffOutput = useCallback(() => {
     let shouldExpandNode;
     if (expandAll != undefined) {
-      shouldExpandNode = () => expandAll;
+      shouldExpandNode = (keypath: (string | number)[]) => {
+        if (expandAll) {
+          return true;
+        }
+
+        console.log(keypath, expandedFields);
+        return expandedFields.has(keypath.join("~"));
+      };
     } else {
       shouldExpandNode = (keypath: (string | number)[]) => {
         return expandedFields.has(keypath.join("~"));
@@ -349,6 +358,7 @@ function RawMessages(props: Props) {
         <EmptyState>{`Waiting to diff next messages from "${topicPath}" and "${diffTopicPath}"`}</EmptyState>
       );
     }
+
     if (!baseItem) {
       return <EmptyState>Waiting for next message</EmptyState>;
     }
@@ -413,6 +423,29 @@ function RawMessages(props: Props) {
                 <DiffSpan onClick={() => onLabelClick(raw)}>{first(raw)}</DiffSpan>
               )}
               shouldExpandNode={shouldExpandNode}
+              onExpand={(data, level, keyPath: string[]) => {
+                setExpandedFields((prevFields) => {
+                  const key = keyPath.join("~");
+                  if (prevFields.has(key)) {
+                    return prevFields;
+                  }
+                  const copy = new Set(prevFields);
+                  copy.add(key);
+                  return copy;
+                });
+              }}
+              onCollapse={(data, level, keyPath: string[]) => {
+                setExpandedFields((prevFields) => {
+                  const key = keyPath.join("~");
+                  if (!prevFields.has(key)) {
+                    return prevFields;
+                  }
+                  const copy = new Set(prevFields);
+                  copy.delete(key);
+                  return copy;
+                });
+                setExpandAll(false);
+              }}
               hideRoot
               invertTheme={false}
               getItemString={getItemString}
