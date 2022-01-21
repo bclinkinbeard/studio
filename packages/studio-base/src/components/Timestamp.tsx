@@ -59,7 +59,7 @@ export default function Timestamp(props: Props): JSX.Element {
         alignItems={horizontal ? "center" : "flex-start"}
         justifyContent={horizontal ? "flex-start" : "center"}
         flexWrap="wrap"
-        spacing={0.5}
+        sx={{ gap: 0.5 }}
       >
         {!disableDate && (
           <>
