@@ -139,8 +139,6 @@ function NodePlayground(props: Props) {
   const {
     state: { nodeStates: userNodeDiagnostics, rosLib },
   } = useUserNodeState();
-  // const userNodeDiagnostics = useSelector((state: any) => state.userNodes.userNodeDiagnostics);
-  // const rosLib = useSelector((state: State) => state.userNodes.rosLib);
 
   const { setUserNodes } = useCurrentLayoutActions();
 
