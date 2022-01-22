@@ -19,6 +19,7 @@ import {
   CardContent,
   CardMedia,
   Container,
+  Fade,
   List,
   ListItem,
   ListItemButton,
@@ -171,30 +172,34 @@ function DraggablePanelItem({
   switch (mode) {
     case "grid":
       return (
-        <Card sx={{ height: "100%" }}>
-          <CardActionArea
-            component={Stack}
-            ref={mergedRef}
-            onClick={onClick}
-            sx={{ height: "100%" }}
-          >
-            {panel.thumbnail != undefined ? (
-              <CardMedia component="img" image={panel.thumbnail} alt={panel.title} />
-            ) : (
-              <Box sx={{ paddingBottom: `${(200 / 280) * 100}%`, bgcolor: "background.default" }} />
-            )}
-            <CardContent sx={{ flex: 1 }}>
-              <Typography variant="subtitle2" gutterBottom>
-                <span data-test={`panel-menu-item ${panel.title}`}>
-                  <TextHighlight targetStr={panel.title} searchText={searchQuery} />
-                </span>
-              </Typography>
-              <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                {panel.description}
-              </Typography>
-            </CardContent>
-          </CardActionArea>
-        </Card>
+        <Fade in>
+          <Card sx={{ height: "100%" }}>
+            <CardActionArea
+              component={Stack}
+              ref={mergedRef}
+              onClick={onClick}
+              sx={{ height: "100%" }}
+            >
+              {panel.thumbnail != undefined ? (
+                <CardMedia component="img" image={panel.thumbnail} alt={panel.title} />
+              ) : (
+                <Box
+                  sx={{ paddingBottom: `${(200 / 280) * 100}%`, bgcolor: "background.default" }}
+                />
+              )}
+              <CardContent sx={{ flex: 1 }}>
+                <Typography variant="subtitle2" gutterBottom>
+                  <span data-test={`panel-menu-item ${panel.title}`}>
+                    <TextHighlight targetStr={panel.title} searchText={searchQuery} />
+                  </span>
+                </Typography>
+                <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                  {panel.description}
+                </Typography>
+              </CardContent>
+            </CardActionArea>
+          </Card>
+        </Fade>
       );
 
     case "list":
