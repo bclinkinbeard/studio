@@ -16,6 +16,7 @@ import { groupBy } from "lodash";
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import { useDebouncedCallback } from "use-debounce";
+import { useImmerReducer } from "use-immer";
 
 import { filterMap } from "@foxglove/den/collection";
 import { useShallowMemo } from "@foxglove/hooks";
@@ -246,10 +247,9 @@ export default function Layout({
   const { globalVariables, setGlobalVariables } = useGlobalVariables();
   const [debug, setDebug] = useState(false);
   const [showTopicTree, setShowTopicTree] = useState<boolean>(false);
-  const [interactionState, interactionStateDispatch] = useReducer(
+  const [interactionState, interactionStateDispatch] = useImmerReducer(
     interactionStateReducer,
-    {},
-    makeInitialInteractionState,
+    makeInitialInteractionState(),
   );
 
   const [currentEditingTopic, setCurrentEditingTopic] = useState<Topic | undefined>(undefined);
