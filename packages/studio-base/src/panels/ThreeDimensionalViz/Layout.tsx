@@ -667,7 +667,7 @@ export default function Layout({
         }
       },
     };
-  }, [handleEvent, selectObject]);
+  }, [handleEvent, interactionStateDispatch, selectObject]);
 
   // When the TopicTree is hidden, focus the <World> again so keyboard controls continue to work
   const worldRef = useRef<typeof Worldview | undefined>(ReactNull);

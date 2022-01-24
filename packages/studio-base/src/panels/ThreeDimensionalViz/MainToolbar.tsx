@@ -56,28 +56,26 @@ function MainToolbar({
     contents: debug ? "Disable debug" : "Enable debug",
   });
 
-  function makeIconButtonStyles(fill: string = "currentColor"): Partial<IButtonStyles> {
-    return {
-      rootHovered: { backgroundColor: "transparent" },
-      rootPressed: { backgroundColor: "transparent" },
-      rootDisabled: { backgroundColor: "transparent" },
+  const iconButtonStyles: Partial<IButtonStyles> = {
+    rootHovered: { backgroundColor: "transparent" },
+    rootPressed: { backgroundColor: "transparent" },
+    rootDisabled: { backgroundColor: "transparent" },
 
-      rootChecked: { backgroundColor: "transparent" },
-      rootCheckedHovered: { backgroundColor: "transparent" },
-      rootCheckedPressed: { backgroundColor: "transparent" },
+    rootChecked: { backgroundColor: "transparent" },
+    rootCheckedHovered: { backgroundColor: "transparent" },
+    rootCheckedPressed: { backgroundColor: "transparent" },
 
-      iconChecked: { color: colors.HIGHLIGHT },
-      icon: {
-        color: theme.semanticColors.bodyText,
+    iconChecked: { color: colors.HIGHLIGHT },
+    icon: {
+      color: theme.semanticColors.bodyText,
 
-        svg: {
-          fill,
-          height: "1em",
-          width: "1em",
-        },
+      svg: {
+        fill: "currentColor",
+        height: "1em",
+        width: "1em",
       },
-    };
-  }
+    },
+  };
 
   return (
     <Stack
@@ -98,7 +96,7 @@ function MainToolbar({
         elementRef={toggleCameraButton.ref}
         data-text="MainToolbar-toggleCameraMode"
         iconProps={{ iconName: "Video3d" }}
-        styles={makeIconButtonStyles()}
+        styles={iconButtonStyles}
       />
       {measuringToolButton.tooltip}
       <IconButton
@@ -107,7 +105,7 @@ function MainToolbar({
         onClick={() => interactionStateDispatch({ action: "select-tool", tool: "measure" })}
         elementRef={measuringToolButton.ref}
         iconProps={{ iconName: "Ruler" }}
-        styles={makeIconButtonStyles()}
+        styles={iconButtonStyles}
       />
       {publishPoseToolButton.tooltip}
       <IconButton
@@ -118,7 +116,7 @@ function MainToolbar({
         }
         elementRef={publishPoseToolButton.ref}
         iconProps={{ iconName: "ArrowExpandUp" }}
-        styles={makeIconButtonStyles()}
+        styles={iconButtonStyles}
       />
       {publishGoalToolButton.tooltip}
       <IconButton
@@ -129,7 +127,7 @@ function MainToolbar({
         }
         elementRef={publishGoalToolButton.ref}
         iconProps={{ iconName: "ArrowCollapseUp" }}
-        styles={makeIconButtonStyles()}
+        styles={iconButtonStyles}
       />
       {publishPointToolButton.tooltip}
       <IconButton
@@ -140,7 +138,7 @@ function MainToolbar({
         }
         elementRef={publishPointToolButton.ref}
         iconProps={{ iconName: "MapMarker" }}
-        styles={makeIconButtonStyles()}
+        styles={iconButtonStyles}
       />
       {process.env.NODE_ENV === "development" && (
         <>
@@ -150,7 +148,7 @@ function MainToolbar({
             onClick={onToggleDebug}
             elementRef={debugButton.ref}
             iconProps={{ iconName: "Bug" }}
-            styles={makeIconButtonStyles()}
+            styles={iconButtonStyles}
           />
         </>
       )}
