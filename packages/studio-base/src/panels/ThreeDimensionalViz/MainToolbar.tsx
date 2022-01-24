@@ -117,7 +117,7 @@ function MainToolbar({
           interactionStateDispatch({ action: "select-tool", tool: "publish-click", type: "pose" })
         }
         elementRef={publishPoseToolButton.ref}
-        iconProps={{ iconName: "UnfoldMore" }}
+        iconProps={{ iconName: "ArrowExpandUp" }}
         styles={makeIconButtonStyles()}
       />
       {publishGoalToolButton.tooltip}
@@ -128,7 +128,7 @@ function MainToolbar({
           interactionStateDispatch({ action: "select-tool", tool: "publish-click", type: "goal" })
         }
         elementRef={publishGoalToolButton.ref}
-        iconProps={{ iconName: "ArrowLeftRight" }}
+        iconProps={{ iconName: "ArrowCollapseUp" }}
         styles={makeIconButtonStyles()}
       />
       {publishPointToolButton.tooltip}
@@ -139,7 +139,7 @@ function MainToolbar({
           interactionStateDispatch({ action: "select-tool", tool: "publish-click", type: "point" })
         }
         elementRef={publishPointToolButton.ref}
-        iconProps={{ iconName: "ArrowStepRight" }}
+        iconProps={{ iconName: "MapMarker" }}
         styles={makeIconButtonStyles()}
       />
       {process.env.NODE_ENV === "development" && (
