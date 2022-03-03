@@ -4,6 +4,9 @@
 
 import { createContext, useContext } from "react";
 
+// by default, modal dialogs are appended to the document body
+// providing a value to this context will instead cause modals
+// to be appended to the DOM node whose id matches the provided value
 const DialogHostIdContext = createContext<string | undefined>(undefined);
 DialogHostIdContext.displayName = "DialogHostIdContext";
 
