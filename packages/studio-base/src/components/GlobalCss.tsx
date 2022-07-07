@@ -6,20 +6,9 @@ import { createGlobalStyle } from "styled-components";
 
 /** GlobalCss component configures html, body, and #root with theme elements */
 const GlobalCss = createGlobalStyle`
-html, body {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  width: 100%;
-
-  // https://github.com/necolas/normalize.css/blob/master/normalize.css#L12
+#root {
   line-height: 1.15;
-}
-*, *:before, *:after {
-  box-sizing: inherit;
-}
-body {
+  box-sizing: border-box;
   background: ${({ theme }) => theme.semanticColors.bodyBackground};
   color: ${({ theme }) => theme.semanticColors.bodyText};
   font: inherit;
@@ -32,8 +21,7 @@ body {
   // scrollable elements to be scrolled without the whole page moving (even if they don't
   // preventDefault on scroll events).
   overscroll-behavior: none;
-}
-#root {
+
   height: 100%;
   width: 100%;
   display: flex;
@@ -43,6 +31,9 @@ body {
   outline: none;
   overflow: hidden;
   z-index: 0;
+}
+#root *, #root *:before, #root *:after {
+  box-sizing: inherit;
 }
 `;
 

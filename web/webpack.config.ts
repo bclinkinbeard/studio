@@ -117,6 +117,12 @@ const mainConfig = (env: unknown, argv: WebpackArgv): Configuration => {
       <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
       <title>Foxglove Studio</title>
     </head>
+    <style>
+      html, body {
+        margin: 0;
+        height: 100%;
+      }
+    </style>
     <script>
       global = globalThis;
     </script>
