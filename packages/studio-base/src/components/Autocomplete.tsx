@@ -259,7 +259,7 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
 
   const autocompleteItems: FzfResultItem<T>[] = useMemo(() => {
     return filterText ? fzf.find(filterText) : fzfUnfiltered;
-  }, [filterText]);
+  }, [filterText, fzf, fzfUnfiltered]);
 
   const hasError = Boolean(props.hasError ?? (autocompleteItems.length === 0 && value?.length));
 
