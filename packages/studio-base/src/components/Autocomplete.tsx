@@ -229,7 +229,7 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
     selectedItem,
     // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
     value = stateValue ?? (selectedItem ? getItemText(selectedItem) : undefined),
-    filterText = value || "",
+    filterText = value ?? "",
     sortWhenFiltering = true,
     clearOnFocus = false,
     minWidth = 100,
